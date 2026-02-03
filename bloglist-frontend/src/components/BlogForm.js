@@ -7,6 +7,10 @@ const BlogForm = ({ createBlog }) => {
 
   const addBlog = (event) => {
     event.preventDefault()
+    if (!title.trim() || !url.trim()) {
+      alert('Title and URL are required')
+      return
+    }
     createBlog ( {
       title: title,
       author: author,
@@ -26,6 +30,7 @@ const BlogForm = ({ createBlog }) => {
           value={title}
           onChange={({ target }) => setTitle(target.value)}
           placeholder='write title text here'
+          required
         />
       </div>
       <div>
@@ -44,6 +49,7 @@ const BlogForm = ({ createBlog }) => {
           value={url}
           onChange={({ target }) => setUrl(target.value)}
           placeholder='write url text here'
+          required
         />
       </div>
       <button id='create-button'type="submit">create</button>
