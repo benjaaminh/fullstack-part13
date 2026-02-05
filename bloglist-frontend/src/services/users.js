@@ -6,4 +6,9 @@ const create = async credentials => {
   return response.data
 }
 
-export default { create }
+const update = async (username, newObject) => {
+  const response = await axios.put(`${ baseUrl }/${username}`, newObject)
+  return response.data
+}
+
+export default { create, update }

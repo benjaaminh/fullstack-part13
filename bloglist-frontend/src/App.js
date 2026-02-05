@@ -7,13 +7,19 @@ import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
 import LoginForm from './components/LoginForm'
 import RegisterForm from './components/RegisterForm'
+import Notification from './components/Notification'
+import ChangeUsernameForm from './components/ChangeUsernameForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [regUsername, setRegUsername] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [regName, setRegName] = useState('')
   const [user, setUser] = useState(null)
+  const [username, setUsername] = useState('')
+  const [notification, setNotification] = useState(null)
   const blogFormRef = useRef()
   const [refreshBlogs, setRefreshBlogs] = useState(false)
 
@@ -37,15 +43,15 @@ const App = () => {
     event.preventDefault()
     try {
       const user = await loginService.login({
-        username, password,
+        username: loginUsername, password: loginPassword,
       })
       blogService.setToken(user.token)
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
       )
       setUser(user)
-      setUsername('')
-      setPassword('')
+      setLoginUsername('')
+      setLoginPassword('')
     } catch (exception) {
       console.log(exception)
     }
@@ -53,7 +59,33 @@ const App = () => {
 
   const handleUserCreation = async (event) => {
     event.preventDefault()
-    await userService.create({ username, name, password })
+    if (!regName.trim()) {
+      setNotification('Failed to create user. Name cannot be empty')
+      setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+      return
+    }
+    try {
+      await userService.create({ username: regUsername, name: regName, password: regPassword })
+      //autologin
+      const user = await loginService.login({ username: regUsername, password: regPassword })
+      blogService.setToken(user.token)
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
+      setUser(user)
+      setNotification(`User '${regUsername}' created successfully and logged in`)
+      setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+      setRegUsername('')
+      setRegPassword('')
+      setRegName('')
+    } catch (exception) {
+      setNotification('Failed to create user - username may already exist')
+      setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+    }
   }
 
   const handleDelete = async (blogObject) => {
@@ -71,6 +103,25 @@ const App = () => {
   const handleLogout = () => {
     window.localStorage.clear()
     setUser(null)
+  }
+
+  const handleUsernameChange = async (event) => {
+    event.preventDefault()
+    try {
+      await userService.update(user.username, { ...user, username })
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify({ ...user, username }))
+      setUser({ ...user, username })
+      setNotification(`Username changed to '${username}'`)
+      setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+      setUsername('')
+    } catch (exception) {
+      setNotification('Failed to change username')
+      setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+    }
   }
 
   const updateLikes = async (id, blogObject) => {
@@ -98,21 +149,22 @@ const App = () => {
 
   return (
     <div>
+      <Notification message={notification} />
       {!user && //if no user is logged in:render this
         <div>
           <h2>Log in to application</h2>
           <LoginForm
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
+            username={loginUsername}
+            password={loginPassword}
+            handleUsernameChange={({ target }) => setLoginUsername(target.value)}
+            handlePasswordChange={({ target }) => setLoginPassword(target.value)}
             handleSubmit={handleLogin}
           />
           <h2>Or register user</h2>
-          <RegisterForm username={username} password={password} name={name}
-            handleNameChange={({ target }) => setName(target.value)}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
+          <RegisterForm username={regUsername} password={regPassword} name={regName}
+            handleNameChange={({ target }) => setRegName(target.value)}
+            handleUsernameChange={({ target }) => setRegUsername(target.value)}
+            handlePasswordChange={({ target }) => setRegPassword(target.value)}
             handleSubmit={handleUserCreation}
           />
         </div>
@@ -123,6 +175,11 @@ const App = () => {
         <div>
           <h2>blogs</h2>
           <p>{user.name} logged in  {logoutButton()}</p>
+          <div>
+            <ChangeUsernameForm username={username}
+              handleUsernameChange={({ target }) => setUsername(target.value)}
+              handleSubmit={handleUsernameChange}/>
+          </div>
           <h2>create new</h2>
           {blogForm()}
           {sortedBlogs.map(blog =>

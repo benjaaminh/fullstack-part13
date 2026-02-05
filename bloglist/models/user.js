@@ -13,11 +13,13 @@ User.init({
   username: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: false
+    allowNull: false,
+    allowEmpty: false
   },
   name: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    allowEmpty: false
   },
 }, {
   sequelize,
