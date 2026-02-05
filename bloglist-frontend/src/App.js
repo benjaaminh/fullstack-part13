@@ -94,9 +94,21 @@ const App = () => {
 
   const handleDelete = async (blogObject) => {
     if (window.confirm(`do you want to delete '${blogObject.title} by ${blogObject.author}'?`)) {
-      await blogService
-        .remove(blogObject.id)
-      setBlogs(blogs.filter(b => b.id !== blogObject.id))
+      try {
+        await blogService
+          .remove(blogObject.id)
+        setBlogs(blogs.filter(b => b.id !== blogObject.id))
+        setNotification(`Blog '${blogObject.title}' deleted successfully`)
+        setTimeout(() => {
+          setNotification(null)
+        }, 5000)
+      } catch (exception) {
+        let errorMessage = exception.response?.data?.error || 'Failed to delete blog'
+        setNotification(errorMessage)
+        setTimeout(() => {
+          setNotification(null)
+        }, 5000)
+      }
     }
   }
 

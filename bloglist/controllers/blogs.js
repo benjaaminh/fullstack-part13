@@ -22,8 +22,7 @@ blogsRouter.get('/', async (req, res) => {
     const blogs = await Blog.findAll({
     attributes: { exclude: ['userId'] },
     include: {
-      model: User,
-      attributes: ['name']
+      model: User
     }
   })
     res.json(blogs)
@@ -40,12 +39,26 @@ const blogFinder = async (req, res, next) => {
   next()
 }
 
+const userExtractor = async (request, response, next) => {
+  if (request.decodedToken) {
+    request.user = await User.findByPk(request.decodedToken.id)  
+  }
+  next()
+}
 
-blogsRouter.delete('/:id', blogFinder, async (req, res) => {
+blogsRouter.delete('/:id', tokenExtractor, userExtractor, blogFinder, async (req, res) => {
+  const loggedInUser = req.user
   try {
     if (req.blog) {
+      if (req.blog.dataValues.userId?.toString() === loggedInUser.id.toString()){
       await req.blog.destroy()
       return res.status(204).end()
+      }
+  else{
+    return res.status(401).json({
+      error: 'Failed to delete blog: wrong account'
+    })
+  }
     } else {
       return res.status(404).json({ error: 'blog not found' })
     }
