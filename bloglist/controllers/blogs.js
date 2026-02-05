@@ -8,13 +8,8 @@ blogsRouter.get('/', async (req, res) => {
 })
 
 blogsRouter.post('/', async (req, res) => {
-  try {
-    const note = await Blog.create(req.body)
-    return res.json(note)
-  } catch(error) {
-      console.error(error);
-    return res.status(400).json({ error })
-  }
+  const note = await Blog.create(req.body)
+  res.status(201).json(note)
 })
 
 const blogFinder = async (req, res, next) => {
@@ -38,16 +33,14 @@ blogsRouter.delete('/:id', blogFinder, async (req, res) => {
 })
  
 blogsRouter.put('/:id', blogFinder, async (request, response) => {
-
   if (request.blog) {
     request.blog.likes = request.body.likes
     await request.blog.save()
     response.json(request.blog)
-  } 
-  else {
-    response.status(404).end()
+  } else {
+    response.status(404).json({ error: 'blog not found' })
   }
- })
+})
  
 
 module.exports = blogsRouter
