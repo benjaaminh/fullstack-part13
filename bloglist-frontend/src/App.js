@@ -81,7 +81,11 @@ const App = () => {
       setRegPassword('')
       setRegName('')
     } catch (exception) {
-      setNotification('Failed to create user - username may already exist')
+      let errorMessage = exception.response?.data?.error?.message || exception.response?.data?.error || 'Failed to create user - username may already exist'
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage.errors[0].message)
+      }
+      setNotification(errorMessage)
       setTimeout(() => {
         setNotification(null)
       }, 5000)
@@ -117,7 +121,11 @@ const App = () => {
       }, 5000)
       setUsername('')
     } catch (exception) {
-      setNotification('Failed to change username')
+      let errorMessage = exception.response?.data?.error?.message || exception.response?.data?.error || 'Failed to change username'
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage.errors[0].message)
+      }
+      setNotification(errorMessage)
       setTimeout(() => {
         setNotification(null)
       }, 5000)
