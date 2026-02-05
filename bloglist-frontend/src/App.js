@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
+import loginService from './services/login'
+import userService from './services/users'
 import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
+import LoginForm from './components/LoginForm'
+import RegisterForm from './components/RegisterForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [user, setUser] = useState(null)
   const blogFormRef = useRef()
   const [refreshBlogs, setRefreshBlogs] = useState(false)
 
@@ -16,6 +24,38 @@ const App = () => {
   }, [refreshBlogs]) //will render everytime state of refresh changes, meaning the blogs will refresh everytime a new one is added, since state of refreshblogs changes then
 
 
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setUser(user)
+      blogService.setToken(user.token)
+    }
+  }, [])
+
+  const handleLogin = async (event) => {
+    event.preventDefault()
+    try {
+      const user = await loginService.login({
+        username, password,
+      })
+      blogService.setToken(user.token)
+      window.localStorage.setItem(
+        'loggedBlogappUser', JSON.stringify(user)
+      )
+      setUser(user)
+      setUsername('')
+      setPassword('')
+    } catch (exception) {
+      console.log(exception)
+    }
+  }
+
+  const handleUserCreation = async (event) => {
+    event.preventDefault()
+    await userService.create({ username, name, password })
+  }
+
   const handleDelete = async (blogObject) => {
     if (window.confirm(`do you want to delete '${blogObject.title} by ${blogObject.author}'?`)) {
       await blogService
@@ -23,6 +63,16 @@ const App = () => {
       setBlogs(blogs.filter(b => b.id !== blogObject.id))
     }
   }
+
+  const logoutButton = () => (
+    <button onClick={handleLogout}>logout</button>
+  )
+
+  const handleLogout = () => {
+    window.localStorage.clear()
+    setUser(null)
+  }
+
   const updateLikes = async (id, blogObject) => {
     const updatedBlog = await blogService
       .update(id, blogObject)
@@ -35,7 +85,7 @@ const App = () => {
     const blog = await blogService
       .create(blogObject)
     setBlogs(blogs.concat(blog))
-    setRefreshBlogs(!refreshBlogs)    
+    setRefreshBlogs(!refreshBlogs)
   }
 
   const blogForm = () => (
@@ -48,20 +98,39 @@ const App = () => {
 
   return (
     <div>
+      {!user && //if no user is logged in:render this
+        <div>
+          <h2>Log in to application</h2>
+          <LoginForm
+            username={username}
+            password={password}
+            handleUsernameChange={({ target }) => setUsername(target.value)}
+            handlePasswordChange={({ target }) => setPassword(target.value)}
+            handleSubmit={handleLogin}
+          />
+          <h2>Or register user</h2>
+          <RegisterForm username={username} password={password} name={name}
+            handleNameChange={({ target }) => setName(target.value)}
+            handleUsernameChange={({ target }) => setUsername(target.value)}
+            handlePasswordChange={({ target }) => setPassword(target.value)}
+            handleSubmit={handleUserCreation}
+          />
+        </div>
+      }
 
 
+      {user && //if a user is logged in, render this
+        <div>
+          <h2>blogs</h2>
+          <p>{user.name} logged in  {logoutButton()}</p>
+          <h2>create new</h2>
+          {blogForm()}
+          {sortedBlogs.map(blog =>
+            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} user={user} />
+          )}
+        </div>
 
-      <div>
-        <h2>blogs</h2>
-        <h2>create new</h2>
-        {blogForm()}
-        {sortedBlogs.map(blog =>
-          <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete}/>
-
-        )}
-      </div>
-
-
+      }
     </div>)
 }
 
