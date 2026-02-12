@@ -8,7 +8,8 @@
     "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
     "dev": "cross-env NODE_ENV=development nodemon index.js",
     "lint": "eslint .",
-    "start:test": "cross-env NODE_ENV=test node index.js"
+    "start:test": "cross-env NODE_ENV=test node index.js",
+    "migration:down": "node util/rollback.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +30,8 @@
     "jsonwebtoken": "^9.0.1",
     "lodash": "^4.17.21",
     "pg": "^8.18.0",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "umzug": "^3.8.2"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
