@@ -9,6 +9,7 @@ import LoginForm from './components/LoginForm'
 import RegisterForm from './components/RegisterForm'
 import Notification from './components/Notification'
 import ChangeUsernameForm from './components/ChangeUsernameForm'
+import readingList from './services/readingList'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -159,6 +160,10 @@ const App = () => {
     setRefreshBlogs(!refreshBlogs)
   }
 
+  const addToReadingList = async (blogId) => {
+    await readingList.create({ blogId, userId: user.id })
+  }
+
   const blogForm = () => (
     <Togglable buttonLabel='new blog' ref={blogFormRef}>
       <BlogForm createBlog={addBlog} />
@@ -203,7 +208,7 @@ const App = () => {
           <h2>create new</h2>
           {blogForm()}
           {sortedBlogs.map(blog =>
-            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} user={user} />
+            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} addToReadingList={addToReadingList} />
           )}
         </div>
 

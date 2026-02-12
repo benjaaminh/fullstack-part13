@@ -1,22 +1,8 @@
 const blogsRouter = require('express').Router()
-const jwt = require('jsonwebtoken')
 const Blog = require('../models/blog')
 const User = require('../models/user')
-const { SECRET } = require('../util/config')
 const {Op} = require('sequelize')
-const tokenExtractor = (req, res, next) => {
-  const authorization = req.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    try {
-      req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
-    } catch{
-      return res.status(401).json({ error: 'token invalid' })
-    }
-  }  else {
-    return res.status(401).json({ error: 'token missing' })
-  }
-  next()
-}
+const { tokenExtractor, blogFinder, userExtractor } = require('../util/middleware')
 
 blogsRouter.get('/', async (req, res) => {
   const where = {}
@@ -51,23 +37,8 @@ blogsRouter.get('/', async (req, res) => {
 blogsRouter.post('/', tokenExtractor, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
   const blog = await Blog.create({...req.body, userId: user.id})
-
-
-  
   res.status(201).json(blog)
 })
-
-const blogFinder = async (req, res, next) => {
-  req.blog = await Blog.findByPk(req.params.id)
-  next()
-}
-
-const userExtractor = async (request, response, next) => {
-  if (request.decodedToken) {
-    request.user = await User.findByPk(request.decodedToken.id)  
-  }
-  next()
-}
 
 blogsRouter.delete('/:id', tokenExtractor, userExtractor, blogFinder, async (req, res) => {
   const loggedInUser = req.user
