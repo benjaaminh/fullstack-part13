@@ -11,4 +11,9 @@ const update = async (username, newObject) => {
   return response.data
 }
 
-export default { create, update }
+const getById = async (id) => {
+  const response = await axios.get(`${baseUrl}/${id}`)
+  return response.data
+}
+
+export default { create, update, getById }

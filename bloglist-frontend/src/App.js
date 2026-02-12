@@ -23,6 +23,7 @@ const App = () => {
   const [notification, setNotification] = useState(null)
   const blogFormRef = useRef()
   const [refreshBlogs, setRefreshBlogs] = useState(false)
+  const [userReadingList, setUserReadingList] = useState([])
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -37,8 +38,17 @@ const App = () => {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
       blogService.setToken(user.token)
+      readingList.setToken(user.token)
     }
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      userService.getById(user.id).then(userData => {
+        setUserReadingList(userData.readings || [])
+      })
+    }
+  }, [user, refreshBlogs])
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -47,6 +57,7 @@ const App = () => {
         username: loginUsername, password: loginPassword,
       })
       blogService.setToken(user.token)
+      readingList.setToken(user.token)
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
       )
@@ -161,7 +172,14 @@ const App = () => {
   }
 
   const addToReadingList = async (blogId) => {
-    await readingList.create({ blogId, userId: user.id })
+    await readingList.create({ blogId })
+    // Refresh reading list
+    const userData = await userService.getById(user.id)
+    setUserReadingList(userData.readings || [])
+    setNotification('Blog added to reading list')
+    setTimeout(() => {
+      setNotification(null)
+    }, 5000)
   }
 
   const blogForm = () => (
@@ -208,7 +226,7 @@ const App = () => {
           <h2>create new</h2>
           {blogForm()}
           {sortedBlogs.map(blog =>
-            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} addToReadingList={addToReadingList} />
+            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} addToReadingList={addToReadingList} userReadingList={userReadingList} />
           )}
         </div>
 

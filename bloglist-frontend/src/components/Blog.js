@@ -1,5 +1,5 @@
 
-const Blog = ({ blog, handleDelete, updateLikes, addToReadingList }) => {
+const Blog = ({ blog, handleDelete, updateLikes, addToReadingList, userReadingList }) => {
   const blogStyle = {
     paddingTop: 10,
     paddingLeft: 2,
@@ -25,13 +25,20 @@ const Blog = ({ blog, handleDelete, updateLikes, addToReadingList }) => {
   const handleBlogRemoval = () => {
     handleDelete(blog)
   }
+
+  // Check if this blog is in the user's reading list
+  const isInReadingList = userReadingList.some(reading => reading.id === blog.id)
   return(
     <div className='blog' style={blogStyle}>
       <div>
         {blog.title} {blog.author} {blog.url}
         <div><button id='remove-button' onClick={handleBlogRemoval}>remove</button></div>
         <div>likes {blog.likes} <button id='like-button' onClick={handleLikes}>like </button></div>
-        <div><button onClick={handleReadingList}>add to reading list </button></div>
+        <div>
+          <button onClick={handleReadingList} disabled={isInReadingList}>
+            {isInReadingList ? 'Already in reading list' : 'add to reading list'}
+          </button>
+        </div>
       </div>
     </div>
   )
