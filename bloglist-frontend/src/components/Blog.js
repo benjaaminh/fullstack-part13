@@ -1,5 +1,11 @@
 
-const Blog = ({ blog, handleDelete, updateLikes, addToReadingList, userReadingList }) => {
+const Blog = ({ blog, handleDelete, updateLikes, addToReadingList, userReadingList, markAsRead }) => {
+
+  // Check if this blog is in the user's reading list
+  const readingEntry = userReadingList.find(reading => reading.id === blog.id)
+  const isInReadingList = !!readingEntry // check if it exists, turns into a boolean
+  const isAlreadyRead = readingEntry?.reading_lists?.read || false // if its marked as read
+
   const blogStyle = {
     paddingTop: 10,
     paddingLeft: 2,
@@ -26,8 +32,12 @@ const Blog = ({ blog, handleDelete, updateLikes, addToReadingList, userReadingLi
     handleDelete(blog)
   }
 
-  // Check if this blog is in the user's reading list
-  const isInReadingList = userReadingList.some(reading => reading.id === blog.id)
+  const handleRead = () => {
+    if (readingEntry && readingEntry.reading_lists) {
+      markAsRead(readingEntry.reading_lists.id)
+    }
+  }
+
   return(
     <div className='blog' style={blogStyle}>
       <div>
@@ -37,6 +47,9 @@ const Blog = ({ blog, handleDelete, updateLikes, addToReadingList, userReadingLi
         <div>
           <button onClick={handleReadingList} disabled={isInReadingList}>
             {isInReadingList ? 'Already in reading list' : 'add to reading list'}
+          </button>
+          <button onClick={handleRead} disabled={!isInReadingList || isAlreadyRead}>
+            {isAlreadyRead ? 'Already read' : 'mark as read'}
           </button>
         </div>
       </div>

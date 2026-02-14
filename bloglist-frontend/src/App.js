@@ -182,6 +182,16 @@ const App = () => {
     }, 5000)
   }
 
+  const markAsRead = async (readingListId) => {
+    await readingList.update(readingListId)
+    const userData = await userService.getById(user.id)
+    setUserReadingList(userData.readings || [])
+    setNotification('Mark as read')
+    setTimeout(() => {
+      setNotification(null)
+    }, 5000)
+  }
+
   const blogForm = () => (
     <Togglable buttonLabel='new blog' ref={blogFormRef}>
       <BlogForm createBlog={addBlog} />
@@ -226,7 +236,7 @@ const App = () => {
           <h2>create new</h2>
           {blogForm()}
           {sortedBlogs.map(blog =>
-            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} addToReadingList={addToReadingList} userReadingList={userReadingList} />
+            <Blog key={blog.id} blog={blog} updateLikes={updateLikes} handleDelete={handleDelete} addToReadingList={addToReadingList} userReadingList={userReadingList} markAsRead={markAsRead} />
           )}
         </div>
 

@@ -23,4 +23,22 @@ router.post('/', tokenExtractor, userExtractor, async (req, res) => {
   res.json(readingList)
 })
 
+const readingListFinder = async (req, res, next) => {
+  req.readingList = await ReadingList.findByPk(req.params.id)
+  next()
+}
+
+router.put('/:id', tokenExtractor, userExtractor, readingListFinder, async (req, res) => {
+  if (req.readingList) {
+    if (req.readingList.userId !== req.user.id) {
+      return res.status(403).json({ error: 'You can only modify your own reading list' })
+    }
+    req.readingList.read = req.body.read;
+    await req.readingList.save()
+    res.json(req.readingList)
+  } else {
+    res.status(404).json({ error: 'Reading list not found' })
+  }
+})
+
 module.exports = router
