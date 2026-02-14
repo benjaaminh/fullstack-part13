@@ -3,6 +3,7 @@ import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import userService from './services/users'
+import logoutService from './services/logout'
 import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
 import LoginForm from './components/LoginForm'
@@ -39,6 +40,7 @@ const App = () => {
       setUser(user)
       blogService.setToken(user.token)
       readingList.setToken(user.token)
+      logoutService.setToken(user.token)
     }
   }, [])
 
@@ -58,6 +60,7 @@ const App = () => {
       })
       blogService.setToken(user.token)
       readingList.setToken(user.token)
+      logoutService.setToken(user.token)
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
       )
@@ -128,9 +131,18 @@ const App = () => {
     <button onClick={handleLogout}>logout</button>
   )
 
-  const handleLogout = () => {
-    window.localStorage.clear()
-    setUser(null)
+  const handleLogout = async () => {
+    try {
+      await logoutService.logout()
+    } catch (exception) {
+      console.log(exception)
+    } finally {
+      logoutService.setToken(null)
+      blogService.setToken(null)
+      readingList.setToken(null)
+      window.localStorage.clear()
+      setUser(null)
+    }
   }
 
   const handleUsernameChange = async (event) => {

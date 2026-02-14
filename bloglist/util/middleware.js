@@ -3,6 +3,7 @@ const User = require('../models/user')
 const Blog = require('../models/blog')
 const { SECRET } = require('../util/config')
 const jwt = require('jsonwebtoken')
+const Session = require('../models/session')
 
 const errorHandler = (error, request, response, next) => {
   logger.error(error.message)
@@ -39,7 +40,14 @@ const tokenExtractor = (req, res, next) => {
 
 const userExtractor = async (request, response, next) => {
   if (request.decodedToken) {
-    request.user = await User.findByPk(request.decodedToken.id)  
+    request.user = await User.findByPk(request.decodedToken.id)
+    const session = await Session.findByPk(request.decodedToken.sessionId)
+    if (!session || !session.valid) {
+      return response.status(401).json({ error: 'token invalid' })
+    }
+    if (request.user.disabled) {
+      return response.status(403).json({ error: 'account disabled' })
+    }
   }
   next()
 }
